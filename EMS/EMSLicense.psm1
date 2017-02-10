@@ -240,7 +240,6 @@ Begin{
         If ($disableIntune) {$disabledPlans+="INTUNE_A"}
         If ($disableAADPremium) {$disabledPlans+="AAD_PREMIUM"}
         If ($disableMultiFactor) {$disabledPlans+="MFA_PREMIUM"}
-    
         If($disabledPlans.count -eq $skuEMS.servicestatus.Count)
         {
             Write-Host "You are disabling all the $($disabledPlans.count) plans available with EMS. I will enforce the -RemoveEMSLicense to let you save the license for another user assignment."
@@ -285,7 +284,7 @@ Process{
     [Bool]$shallStop = $false
     If (!($user -match "^[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}$"))
     {
-        Write-host -ForegroundColor red "`"$user`" is not a valid email address"
+        Write-host -ForegroundColor red "`"$($user)`" is not a valid email address"
         $shallStop = $true
     }
     Else{
@@ -294,7 +293,7 @@ Process{
         $userToLicense = Get-MsolUser -SearchString $user
         If (!$userToLicense)
         {
-            Write-host -ForegroundColor red "User: `"$user`" Not Found using Get-MsolUser."
+            Write-host -ForegroundColor red "User: `"$($user)`" Not Found using Get-MsolUser."
             $shallStop = $true
         }
     }
@@ -361,21 +360,26 @@ Process{
                             {
                                 # use companyLocation as usageLocation
                                 $location = $companyLocation
+                                Write-Verbose "Using location: $($location)"
                             }
                             Else
                             {
+                                Write-Verbose "Exiting script."
+                                Write-Debug "Exiting script as per user choice."
                                 exit; #aborting Execution
                             }
                         }
                         Else
                         {
                             # good country code, nothing to do here as $location seems valid
+                            Write-Verbose "Using location: $($location)"
                         }
                     }
                     Else
                     {
-                        # location less than 2 chars, assuming user hit enter and decided to use companyLocation
-                            $location = $companyLocation
+                       # location less than 2 chars, assuming user hit enter and decided to use companyLocation
+                       $location = $companyLocation
+                       Write-Verbose "Using location: $($location)"
                     }
                 }
     
