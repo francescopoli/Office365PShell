@@ -5,7 +5,8 @@ Open PowerShell
 
 Run
 Set-location [path where you saved the module]
-Import-Module .\EMSLicense.psm1
+#dot source the script to import the function
+. .\EMSLicense.psm1
 
 To Start:
 Set-EMSLicense user@contoso.com

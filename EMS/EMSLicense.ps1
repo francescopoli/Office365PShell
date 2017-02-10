@@ -173,13 +173,13 @@ Begin{
         {
             Write-Host "Connecting to MsOnline Powershell..."
             $Error.Clear()
-            Import-Module MSOnline
+            Import-Module MSOnline -Verbose:$false
             Connect-MsolService
             If ($Error.Count -ge 1)
             {
-                Write-Verbose "Failed to connect to MSOnline service on the second attempt. Exiting."
-                Write-Debug "Failed to connect to MSOnline service on the second attempt. Exiting."
-                Exit
+                Write-Verbose "Failed to connect to MSOnline service. Exiting."
+                Write-Debug "Failed to connect to MSOnline. Exiting."
+                Throw ("Failed to connect to MSOnline service. Exiting.") 
             }
         }
     }
@@ -195,15 +195,15 @@ Begin{
             $Error.Clear()
             Write-Verbose "Failed to retrieve information from Azure Active Directory."
             Write-Host "Connecting to MsOnline Powershell..."
-            Import-Module MSOnline
-            Connect-MsolService
-            $skuEMS = (Get-MsolAccountSku).where({$_.accountSkuId -like "*:EMS"})
+            Import-Module MSOnline -Verbose:$false
+            Connect-MsolService 
+            $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
             $skuIdEMS = $skuEMS.AccountSkuId
             If ($Error.Count -ge 1)
             {
-                Write-Verbose "Failed to connect to MSOnline service on the second attempt. Exiting."
-                Write-Debug "Failed to connect to MSOnline service on the second attempt. Exiting."
-                Exit
+                Write-Verbose "Failed to connect to MSOnline service. Exiting."
+                Write-Debug "Failed to connect to MSOnline service. Exiting."
+                Throw ("Failed to connect to MSOnline service. Exiting.") 
             }
         }
     }
@@ -240,7 +240,7 @@ Begin{
         If ($disableIntune) {$disabledPlans+="INTUNE_A"}
         If ($disableAADPremium) {$disabledPlans+="AAD_PREMIUM"}
         If ($disableMultiFactor) {$disabledPlans+="MFA_PREMIUM"}
-        If($disabledPlans.count -eq $skuEMS.servicestatus.Count)
+        If (($disabledPlans.count -eq $skuEMS.servicestatus.Count) -and $skuEMS )  
         {
             Write-Host "You are disabling all the $($disabledPlans.count) plans available with EMS. I will enforce the -RemoveEMSLicense to let you save the license for another user assignment."
             $RemoveEMSLicense = $true
@@ -249,7 +249,14 @@ Begin{
         {
             #if nothing to be disabled, then consider all to be enabled, so passing an empty $disabledPlan is legit
             $ExcludedLicenses = New-MsolLicenseOptions -AccountSkuId $skuIdEMS -DisabledPlans $disabledPlans
-            Write-Verbose "Following plans will be disabled: $($disabledPlans)"
+            if ( $disabledPlans.Length -gt 0)
+            {
+               Write-Verbose "Following plans will be disabled: $($disabledPlans)"
+            }
+            Else
+            {
+               Write-Verbose "No plans to disable, will enable them all"
+            }
         }
 #endregion
 }
@@ -366,7 +373,7 @@ Process{
                             {
                                 Write-Verbose "Exiting script."
                                 Write-Debug "Exiting script as per user choice."
-                                exit; #aborting Execution
+                                Throw("Exiting script as per user choice.") #aborting Execution
                             }
                         }
                         Else
@@ -388,8 +395,7 @@ Process{
                     Set-MsolUser -UserPrincipalName $userToLicense.UserPrincipalName -UsageLocation $location
                 }
                 Catch{
-                    Write-Host -ForegroundColor red "Something bad happened while assigninig user location, aborting"
-                    Exit
+                    Throw("Something bad happened while assigninig user location, aborting")
                 } 
             }     
             Else
