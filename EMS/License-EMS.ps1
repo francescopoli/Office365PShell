@@ -359,8 +359,7 @@ Process{
             {
                 # assigning license, location assingment should be succeded at this stage
                 If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
-                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS 
-                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
+                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
             } 
             Else 
             {
@@ -368,14 +367,14 @@ Process{
                 If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
                 {
                     # EMS license present, no need to use the -addLicense parameter
+                    If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses -Verbose
                 }
                 Else
                 {
                     # if not EMS license, then pass the -addLicenses paramter too
-                    #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
-                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS 
-                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
+                    If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
+                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
                 }
             }               
 #endregion
@@ -387,22 +386,6 @@ Process{
     }
 }
 
-End{}
+End{ If ($verbose){Write-host "Completed"}}
 
 }
-
-#License-EMSUser user@contoso.com -disableAzureIRM -disableMultiFactor -usageLocation IT
-#License-EMSUser user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
-
-#$csv | License-EMSUser -RemoveEMSLicense #-disableAzureIRM -disableADPremium -disableMultiFactor
-#$csv | License-EMSUser 
-#$csv | License-EMSUser -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
-
-#Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada  | License-EMSUser -RemoveEMSLicense
-#Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada | Get-MsolUser | fl userprin*,licenses,usage*
-
-#License-EMSUser aaaaaa@ssss.com -location io
-#License-EMSUser
-
-
-
