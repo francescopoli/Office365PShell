@@ -1,6 +1,7 @@
-﻿<#       
+﻿Function License-EMSUser{
+<#       
     .SYNOPSIS
-    License-EMS is to facilitate licenses assingment process for Office 365 EMS SKU.
+    License-EMS is to facilitate licenses assignment process for Office 365 EMS SKU.
 
     .DESCRIPTION
     Provide instrumentation to:
@@ -65,42 +66,53 @@
     Verbose output for console
         
     .EXAMPLE
-    Example -1- License a single and assing Italy as user location
     License-EMSUser user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
+    License a single and assing Italy as user location
     
     .EXAMPLE
-    Example -2- License a user with all available plans
     License-EMSUser user@contoso.com
+    License a user with all available plans
+    
 
     .EXAMPLE
-    Example -3- License all users in a groups from Azure AD and keep the Multifactor Authentication disabled
     Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada -MaxResults unlimited | License-EMSUser -DisableMultiFactor
+    License all users in a groups from Azure AD and keep the Multifactor Authentication disabled
+    
 
     .EXAMPLE
-    Example -4- License all users in a groups from Exchange Online and keep the Multifactor Authentication disabled
     Get-DistributionGroupMember -Identity intunegroup -ResultSize unlimited | License-EMSUser -DisableMultiFactor
+    License all users in a groups from Exchange Online and keep the Multifactor Authentication disabled
+    
     
     .EXAMPLE
-    Example -5- License all users in an Office365 Group for all plans
     Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup GroupName).ExternalDirectoryObjectId | License-EMSUser
+    License all users in an Office365 Group for all plans
+    
    
     .EXAMPLE
-    Example -6- License all users from a CSV
-    CSV File:|  Users,usageLocation  |
-    name    :|  user1@contoso.com,it |         
-    file.csv:|  user2@contoso.com,us | 
-    $csv = import-csv -path .\file.csv
-    $csv | License-EMSUser
-    
+    $csv = import-csv -path .\file.csv ; $csv | License-EMSUser
+    CSV File name: file.csv 
+    CSV File Content: | Users,usageLocation  |     | UserPrincipalName,usageLocation  |
+                      | user1@contoso.com,it |  OR | user1@contoso.com,it             |         
+                      | user2@contoso.com,us |     | user2@contoso.com,us             |
+
+        
+    License all users from a CSV
+    Header can be (or only a single first column, without the comma):
+                UserPrincipalName,usageLocation
+                EmailAddress,usageLocation
+                WindowsEmailAddress,usageLocation
+                Users,usageLocation
+                User,usageLocation 
+
     .EXAMPLE
-    Example -7- Remove all licenses from a user
     License-EMSUser user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
-    or
-    License-EMSUser user@contoso.com -RemoveEMSLicense
+    PS C:\>License-EMSUser user@contoso.com -RemoveEMSLicense
+    Remove all licenses from a user
 
     
 #>
-Function License-EMSUser{
+
     [CmdletBinding()]
     Param (
 
