@@ -28,8 +28,7 @@
 
     Input from pipeline can also come from Get-MsolUser,Get-MsolGroupMember and Get-Mailbox
 	
-
-		Author: Francesco Poli fpoli@microsoft.com
+	Author: Francesco Poli fpoli@microsoft.com
 	
     .PARAMETER Users
      Single user object in valid smtp address format user@contoso.com or collection of objects from CSV file or pipeline input.
@@ -61,6 +60,9 @@
 
     .PARAMETER DisableMultifactor
     Disable plan MFA_PREMIUM -> Azure Multi-Factor Authentication 
+
+    .PARAMETER Verbose
+    Verbose output for console
         
     .EXAMPLE
     Example -1- License a single and assing Italy as user location
@@ -206,7 +208,7 @@ Begin{
         {
             #if nothing to be disabled, then consider all to be enabled, so passing an empty $disabledPlan is legit
             $ExcludedLicenses = New-MsolLicenseOptions -AccountSkuId $skuIdEMS -DisabledPlans $disabledPlans
-            If ($verbose){Write-Host "Following plans will be disabled: $($disabledPlans)"}
+            Write-Verbose "Following plans will be disabled: $($disabledPlans)"
         }
 #endregion
 }
@@ -215,16 +217,15 @@ Process{
      
 #region Entry\User validation 
     # Given the entry from parameter or pipeline, try to match it coming from various sources
-    
     If ( $Users.GetType().Name -eq "String")
     {
         $user = $Users
-        If ($verbose){Write-host "Processing entry: `"$user`" as command line parameter"}
+        Write-Verbose "Processing entry: `"$user`" as command line parameter"
     }
     Else
     {
-        If ($Users.UserPrincipalName) {$user = $Users.UserPrincipalName; If ($verbose){Write-host "Processing entry: `"$user`" as UserPrincipalName"}}
-        ElseIf ($Users.EmailAddress) {$user = $Users.EmailAddress; If ($verbose){Write-host "Processing entry: `"$user`" as EmailAddress"}}
+        If ($Users.UserPrincipalName) {$user = $Users.UserPrincipalName; Write-Verbose "Processing entry: `"$user`" as UserPrincipalName"}
+        ElseIf ($Users.EmailAddress) {$user = $Users.EmailAddress; Write-Verbose "Processing entry: `"$user`" as EmailAddress"}
         ElseIf ( ($Users.EmailAddresses -cmatch "^(SMTP)")) 
         {
             # assuming entry is coming from pipelining Exo Online Get-Mailbox, pulling out the primary SMTP address from EmailAddresses attribute
@@ -232,11 +233,11 @@ Process{
             # as side note, if you pull in the pipeline from Get-Mailbox, it is unlikely you will reach this stage because the UserPrincipalName is also part
             # of the cmdLet output and is the first If in the chain
             $user = ($Users.EmailAddresses -cmatch "^(SMTP)").Split(":")[1]; 
-            If ($verbose){Write-host "Processing entry: `"$user`" as Primary SMTP address from EmailAddresses"}
+            Write-host "Processing entry: `"$user`" as Primary SMTP address from EmailAddresses"
         }
-        ElseIf ($Users.WindowsEmailAddress) {$user = $Users.WindowsEmailAddress; If ($verbose){Write-host "Processing entry: `"$user`" as WindowsEmailAddress"}}
-        ElseIf ($Users.Users) {$user = $Users.Users; If ($verbose){Write-host "Processing entry: `"$user`" as Users CSV field"}}
-        ElseIf ($Users.User) {$user = $Users.User; If ($verbose){Write-host "Processing entry: `"$user`" as User CSV field"}}  
+        ElseIf ($Users.WindowsEmailAddress) {$user = $Users.WindowsEmailAddress; Write-Verbose "Processing entry: `"$user`" as WindowsEmailAddress"}
+        ElseIf ($Users.Users) {$user = $Users.Users; Write-Verbose "Processing entry: `"$user`" as Users CSV field"}
+        ElseIf ($Users.User) {$user = $Users.User; Write-Verbose "Processing entry: `"$user`" as User CSV field"}  
     }
         
     [Bool]$shallStop = $false
@@ -266,7 +267,7 @@ Process{
             #remove the whole EMS Package
             If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
             {
-                If ($verbose){Write-Host "Removing EMS license from: $($Users.UserPrincipalName)"}
+                Write-Verbose "Removing EMS license from: $($Users.UserPrincipalName)"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuIdEMS
             }
             Else{;}
@@ -290,7 +291,7 @@ Process{
 
                 If (!($validCountryCodes -contains $location))
                 { 
-                    If ($verbose){Write-Host "Invalid usageLocation: $($location) from input."}
+                    Write-Verbose "Invalid usageLocation: $($location) from input."
                     $location = ""
                 } 
                      
@@ -337,7 +338,7 @@ Process{
                 }
     
                 Try{
-                    If ($verbose){Write-host "Assigning user location: `"$($location)`" to `"$($userToLicense.UserPrincipalName)`""}
+                    Write-Verbose "Assigning user location: `"$($location)`" to `"$($userToLicense.UserPrincipalName)`""
                     Set-MsolUser -UserPrincipalName $userToLicense.UserPrincipalName -UsageLocation $location
                 }
                 Catch{
@@ -358,7 +359,7 @@ Process{
             If (!($userToLicense.Licenses))
             {
                 # assigning license, location assingment should be succeded at this stage
-                If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
+                Write-verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
             } 
             Else 
@@ -367,13 +368,13 @@ Process{
                 If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
                 {
                     # EMS license present, no need to use the -addLicense parameter
-                    If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
-                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses -Verbose
+                    Write-Verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
+                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
                 }
                 Else
                 {
                     # if not EMS license, then pass the -addLicenses paramter too
-                    If ($verbose){Write-host "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""}
+                    Write-Verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
                 }
             }               
@@ -386,6 +387,6 @@ Process{
     }
 }
 
-End{ If ($verbose){Write-host "Completed"}}
+End{ Write-Verbose "Completed"}
 
 }
