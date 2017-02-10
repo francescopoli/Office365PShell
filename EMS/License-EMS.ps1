@@ -63,8 +63,40 @@
     Disable plan MFA_PREMIUM -> Azure Multi-Factor Authentication 
         
     .EXAMPLE
-        
+    Example -1- License a single and assing Italy as user location
+    License-EMSUser user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
+    
+    .EXAMPLE
+    Example -2- License a user with all available plans
+    License-EMSUser user@contoso.com
 
+    .EXAMPLE
+    Example -3- License all users in a groups from Azure AD and keep the Multifactor Authentication disabled
+    Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada -MaxResults unlimited | License-EMSUser -DisableMultiFactor
+
+    .EXAMPLE
+    Example -4- License all users in a groups from Exchange Online and keep the Multifactor Authentication disabled
+    Get-DistributionGroupMember -Identity intunegroup -ResultSize unlimited | License-EMSUser -DisableMultiFactor
+    
+    .EXAMPLE
+    Example -5- License all users in an Office365 Group for all plans
+    Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup GroupName).ExternalDirectoryObjectId | License-EMSUser
+   
+    .EXAMPLE
+    Example -6- License all users from a CSV
+    CSV File:|  Users,usageLocation  |
+    name    :|  user1@contoso.com,it |         
+    file.csv:|  user2@contoso.com,us | 
+    $csv = import-csv -path .\file.csv
+    $csv | License-EMSUser
+    
+    .EXAMPLE
+    Example -7- Remove all licenses from a user
+    License-EMSUser user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
+    or
+    License-EMSUser user@contoso.com -RemoveEMSLicense
+
+    
 #>
 Function License-EMSUser{
     [CmdletBinding()]
