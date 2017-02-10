@@ -48,6 +48,8 @@
     Valid 2 letter standard ISO code [https://www.iso.org/obp/ui/#search/code/] representing markets where Office365 is currently available
     Parameter is used(applied) when user has no prior UsageLocation already assinged. If UsageLocation is already assigned to user, parameter
     will not be used or applied to user, even so it will trigger an error if an invalid code is used.
+    Available markets https://products.office.com/en/business/international-availability
+    As per 2016-02-10 not available in CU,IR,KP,SD,SY
 
     .PARAMETER RemoveEMSLicense
     Completely remove the EMS license from the user, if this parameter is used, is the same as passing all the -Disabled* ones
@@ -73,6 +75,9 @@
 
     .PARAMETER Verbose
     Verbose output for console
+    
+    .PARAMETER Verbose
+    Debug output for console
         
     .EXAMPLE
     License-EMSUser user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
@@ -143,19 +148,19 @@ Get-MsolGroupMember and Get-Mailbox are supported.")] $Users,
     [parameter(Mandatory=$false)]
     [switch] $DisableMultiFactor, #MFA_PREMIUM - Azure Multi-Factor Authentication 
     
-    [parameter(Mandatory=$false)]
+    [parameter(Mandatory=$false)] # not available in CU,IR,KP,SD,SY
     [ValidateSet("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD",
                  "BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI","CV",
-                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR","CU",
+                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR",
                  "CW","CY","CZ","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","ET","FK","FO","FJ","FI","FR",
                  "GF","PF","TF","GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",
-                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IR","IQ","IE","IM","IL","IT","JM","JP","JE","JO",
-                 "KZ","KE","KI","KP","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",
+                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IQ","IE","IM","IL","IT","JM","JP","JE","JO",
+                 "KZ","KE","KI","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",
                  "MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ",
                  "MM","NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MP","NO","OM","PK","PW","PS","PA",
                  "PG","PY","PE","PH","PN","PL","PT","PR","QA","RE","RO","RU","RW","BL","SH","KN","LC","MF","PM",
                  "VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES",
-                 "LK","SD","SR","SJ","SZ","SE","CH","SY","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",
+                 "LK","SR","SJ","SZ","SE","CH","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",
                  "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")] [string] $usageLocation = ""  
 )
 
@@ -167,42 +172,58 @@ Begin{
         Else 
         {
             Write-Host "Connecting to MsOnline Powershell..."
+            $Error.Clear()
             Import-Module MSOnline
             Connect-MsolService
+            If ($Error.Count -ge 1)
+            {
+                Write-Verbose "Failed to connect to MSOnline service on the second attempt. Exiting."
+                Write-Debug "Failed to connect to MSOnline service on the second attempt. Exiting."
+                Exit
+            }
         }
     }
     else
     {
         #EMS SKU from tenant
         $Error.Clear()
+        Write-Verbose "Retrieving EMS SKU from your subscription"
         $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
-        $skuIdEMS = $skuEMS.AccountSkuId#(Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"}).AccountSkuId
+        $skuIdEMS = $skuEMS.AccountSkuId
         If ($Error.Count -ge 1) 
         {
             $Error.Clear()
+            Write-Verbose "Failed to retrieve information from Azure Active Directory."
             Write-Host "Connecting to MsOnline Powershell..."
             Import-Module MSOnline
             Connect-MsolService
-            $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
-            $skuIdEMS = $skuEMS.AccountSkuId#(Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"}).AccountSkuId
-            If ($Error.Count -ge 1){exit}
+            $skuEMS = (Get-MsolAccountSku).where({$_.accountSkuId -like "*:EMS"})
+            $skuIdEMS = $skuEMS.AccountSkuId
+            If ($Error.Count -ge 1)
+            {
+                Write-Verbose "Failed to connect to MSOnline service on the second attempt. Exiting."
+                Write-Debug "Failed to connect to MSOnline service on the second attempt. Exiting."
+                Exit
+            }
         }
     }
 #endregion
-    
+    # Available markets https://products.office.com/en/business/international-availability
+    # not available in CU,IR,KP,SD,SY
     $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
                  "BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI","CV",`
-                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR","CU",`
+                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR",`
                  "CW","CY","CZ","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","ET","FK","FO","FJ","FI","FR",`
                  "GF","PF","TF","GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",`
-                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IR","IQ","IE","IM","IL","IT","JM","JP","JE","JO",`
-                 "KZ","KE","KI","KP","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",`
+                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IQ","IE","IM","IL","IT","JM","JP","JE","JO",`
+                 "KZ","KE","KI","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",`
                  "MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ",`
                  "MM","NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MP","NO","OM","PK","PW","PS","PA",`
                  "PG","PY","PE","PH","PN","PL","PT","PR","QA","RE","RO","RU","RW","BL","SH","KN","LC","MF","PM",`
                  "VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES",`
-                 "LK","SD","SR","SJ","SZ","SE","CH","SY","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",`
+                 "LK","SR","SJ","SZ","SE","CH","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",`
                  "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")
+
 #region Disabled Plans options
         $disabledPlans = @()
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
