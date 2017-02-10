@@ -1,4 +1,4 @@
-﻿Function License-EMSUser{
+﻿Function Set-EMSLicense{
 <#       
     .SYNOPSIS
     License-EMS is to facilitate licenses assignment process for Office 365 EMS SKU.
