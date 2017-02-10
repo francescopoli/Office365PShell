@@ -29,9 +29,14 @@
 
     Input from pipeline can also come from Get-MsolUser,Get-MsolGroupMember and Get-Mailbox
 	
-    Use:
+    Require
+        Windows Azure Active Directory Module
+        Connect to Office 365 PowerShell
+        https://technet.microsoft.com/en-us/library/dn975125.aspx
+
+    For usage guidelines:
          get-help Set-EMSLicense -examples
-    for usage guidelines.
+    
 
 	Author: Francesco Poli fpoli@microsoft.com
 	

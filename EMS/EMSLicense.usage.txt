@@ -1,0 +1,20 @@
+﻿Usage:
+
+Save locally
+Open PowerShell
+
+Run
+Set-location [path where you saved the module]
+Import-Module .\EMSLicense.psm1
+
+To Start:
+Set-EMSLicense user@contoso.com
+
+For Help:
+Get-Help Set-EMSLicense 
+Get-Help Set-EMSLicense -Examples
+
+Requirements:
+Windows Azure Active Directory Module
+Connect to Office 365 PowerShell
+https://technet.microsoft.com/en-us/library/dn975125.aspx
