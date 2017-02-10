@@ -1,7 +1,7 @@
 ﻿Function Set-EMSLicense{
 <#       
     .SYNOPSIS
-    License-EMS is to facilitate licenses assignment process for Office 365 EMS SKU.
+    Set-EMSLicense is to facilitate licenses assignment process for Office 365 EMS SKU.
 
     .DESCRIPTION
     Provide instrumentation to:
@@ -80,31 +80,31 @@
     Debug output for console
         
     .EXAMPLE
-    License-EMSUser user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
-    License a single and assing Italy as user location
+    Set-EMSLicense user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
+    License a single and Set-EMSLicense Italy as user location
     
     .EXAMPLE
-    License-EMSUser user@contoso.com
+    Set-EMSLicense user@contoso.com
     License a user with all available plans
     
 
     .EXAMPLE
-    Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada -MaxResults unlimited | License-EMSUser -DisableMultiFactor
+    Get-MsolGroupMember -GroupObjectId 614162e2-67dd-4b33-875d-c486892a0ada -MaxResults unlimited | Set-EMSLicense -DisableMultiFactor
     License all users in a groups from Azure AD and keep the Multifactor Authentication disabled
     
 
     .EXAMPLE
-    Get-DistributionGroupMember -Identity intunegroup -ResultSize unlimited | License-EMSUser -DisableMultiFactor
+    Get-DistributionGroupMember -Identity intunegroup -ResultSize unlimited | Set-EMSLicense -DisableMultiFactor
     License all users in a groups from Exchange Online and keep the Multifactor Authentication disabled
     
     
     .EXAMPLE
-    Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup GroupName).ExternalDirectoryObjectId | License-EMSUser
+    Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup GroupName).ExternalDirectoryObjectId | Set-EMSLicense
     License all users in an Office365 Group for all plans
     
    
     .EXAMPLE
-    $csv = import-csv -path .\file.csv ; $csv | License-EMSUser
+    $csv = import-csv -path .\file.csv ; $csv | Set-EMSLicense
     CSV File name: file.csv 
     CSV File Content: | Users,usageLocation  |     | UserPrincipalName,usageLocation  |
                       | user1@contoso.com,it |  OR | user1@contoso.com,it             |         
@@ -120,8 +120,8 @@
                 User,usageLocation 
 
     .EXAMPLE
-    License-EMSUser user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
-    PS C:\>License-EMSUser user@contoso.com -RemoveEMSLicense
+    Set-EMSLicense user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
+    PS C:\>Set-EMSLicense user@contoso.com -RemoveEMSLicense
     Remove all licenses from a user
 
     
