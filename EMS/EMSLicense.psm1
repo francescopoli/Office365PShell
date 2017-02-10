@@ -29,6 +29,10 @@
 
     Input from pipeline can also come from Get-MsolUser,Get-MsolGroupMember and Get-Mailbox
 	
+    Use:
+         get-help Set-EMSLicense -examples
+    for usage guidelines.
+
 	Author: Francesco Poli fpoli@microsoft.com
 	
     .PARAMETER Users
