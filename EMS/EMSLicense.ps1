@@ -187,13 +187,12 @@ Begin{
     {
         #EMS SKU from tenant
         $Error.Clear()
-        Write-Verbose "Retrieving EMS SKU from your subscription"
         $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
         $skuIdEMS = $skuEMS.AccountSkuId
         If ($Error.Count -ge 1) 
         {
             $Error.Clear()
-            Write-Verbose "Failed to retrieve information from Azure Active Directory."
+            Write-Verbose "Failed to retrieve EMS SKU from Azure Active Directory, retrying..."
             Write-Host "Connecting to MsOnline Powershell..."
             Import-Module MSOnline -Verbose:$false
             Connect-MsolService 
@@ -206,8 +205,10 @@ Begin{
                 Throw ("Failed to connect to MSOnline service. Exiting.") 
             }
         }
+        Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
     }
 #endregion
+    
     # Available markets https://products.office.com/en/business/international-availability
     # not available in CU,IR,KP,SD,SY
     $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
@@ -225,21 +226,25 @@ Begin{
                  "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")
 
 #region Disabled Plans options
-        $disabledPlans = @()
+    $enabledPLans=@()
+    $disabledPlans = @()
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
-        If ($disableAzureIRM) {$disabledPlans+="RMS_S_ENTERPRISE"} 
-        If ($disableRMS) {
+        
+    If (!$RemoveEMSLicense){
+        If ($DisableAzureIRM)
+        {
+            # Azure Information Protection depends on AT LEAST an assigned Azure Rights Management plans (except for Right Management Adhoc), if this to be enabled, then enable also RMS Premium
+            $disabledPlans+="RMS_S_ENTERPRISE"
             $disabledPlans+="RMS_S_PREMIUM"
-            If( !($disabledPlans -contains "RMS_S_ENTERPRISE") ) 
-            { 
-                $disabledPlans+="RMS_S_ENTERPRISE" 
-                # Azure Information Protection depends on AT LEAST an assigned Azure Rights Management plans
-                # in any other sku (like enterprise) but not the Right Management Adhoc
-            }
         }
-        If ($disableIntune) {$disabledPlans+="INTUNE_A"}
-        If ($disableAADPremium) {$disabledPlans+="AAD_PREMIUM"}
-        If ($disableMultiFactor) {$disabledPlans+="MFA_PREMIUM"}
+        Else{
+            $enabledPLans+="RMS_S_ENTERPRISE"
+            If ($disableRMS){$disabledPlans+="RMS_S_PREMIUM"}Else{$enabledPLans+="RMS_S_PREMIUM"}
+        }
+
+        If ($disableIntune) {$disabledPlans+="INTUNE_A"} Else{$enabledPLans+="INTUNE_A"}
+        If ($disableAADPremium) {$disabledPlans+="AAD_PREMIUM"} Else{$enabledPLans+="AAD_PREMIUM"}
+        If ($disableMultiFactor) {$disabledPlans+="MFA_PREMIUM"} Else{$enabledPLans+="MFA_PREMIUM"}
         If (($disabledPlans.count -eq $skuEMS.servicestatus.Count) -and $skuEMS )  
         {
             Write-Host "You are disabling all the $($disabledPlans.count) plans available with EMS. I will enforce the -RemoveEMSLicense to let you save the license for another user assignment."
@@ -251,14 +256,19 @@ Begin{
             $ExcludedLicenses = New-MsolLicenseOptions -AccountSkuId $skuIdEMS -DisabledPlans $disabledPlans
             if ( $disabledPlans.Length -gt 0)
             {
-               Write-Verbose "Following plans will be disabled: $($disabledPlans)"
+               #Write-Verbose "Following plans will be disabled: $($disabledPlans)"
+               Write-Verbose "|--- DISABLED PLANS: $($disabledPlans)" 
+               Write-Verbose "|--- ENABLED PLANS:  $($enabledPlans)"
             }
             Else
             {
-               Write-Verbose "No plans to disable, will enable them all"
+                Write-Verbose "No plans to disable, enabling `'em all: $($enabledPlans)"
             }
         }
-#endregion
+
+
+    }
+    #endregion
 }
 
 Process{
@@ -268,7 +278,7 @@ Process{
     If ( $Users.GetType().Name -eq "String")
     {
         $user = $Users
-        Write-Verbose "Processing entry: `"$user`" as command line parameter"
+        Write-Verbose "Processing entry: `"$user`" per command line parameter."
     }
     Else
     {
@@ -315,10 +325,10 @@ Process{
             #remove the whole EMS Package
             If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
             {
-                Write-Verbose "Removing EMS license from: $($Users.UserPrincipalName)"
+                Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuIdEMS
             }
-            Else{;}
+            Else{ Write-Verbose "   User $($userToLicense.UserPrincipalName) has no $($skuIdEMS) license to remove." }
         }
         Else
         {
@@ -411,7 +421,7 @@ Process{
             If (!($userToLicense.Licenses))
             {
                 # assigning license, location assingment should be succeded at this stage
-                Write-verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
+                Write-verbose "/// Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
             } 
             Else 
@@ -420,13 +430,15 @@ Process{
                 If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
                 {
                     # EMS license present, no need to use the -addLicense parameter
-                    Write-Verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
+                    #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
+                    Write-Verbose "+++ Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
                 }
                 Else
                 {
                     # if not EMS license, then pass the -addLicenses paramter too
-                    Write-Verbose "Assigning license: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`""
+                    #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
+                    Write-Verbose "+++ Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
                 }
             }               
