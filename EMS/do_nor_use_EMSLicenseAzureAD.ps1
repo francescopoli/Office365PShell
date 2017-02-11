@@ -170,7 +170,7 @@ Begin{
     {
         If ( !(Get-Module -ListAvailable MSOnline) )
         { 
-            Write-Host "Azure AD Module required, please install from: https://technet.microsoft.com/en-us/library/dn975125.aspx "
+            Write-Host "Azure AD Module required, trying to install..."
             Install-Module -Name AzureAD  -Scope CurrentUser -AllowClobber -Confirm
         }
         Else 
