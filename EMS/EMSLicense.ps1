@@ -421,7 +421,7 @@ Process{
             If (!($userToLicense.Licenses))
             {
                 # assigning license, location assingment should be succeded at this stage
-                Write-verbose "/// Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                Write-verbose "/// Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
             } 
             Else 
@@ -431,14 +431,14 @@ Process{
                 {
                     # EMS license present, no need to use the -addLicense parameter
                     #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-                    Write-Verbose "+++ Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                    Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
                 }
                 Else
                 {
                     # if not EMS license, then pass the -addLicenses paramter too
                     #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-                    Write-Verbose "+++ Assigning licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                    Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
                 }
             }               
