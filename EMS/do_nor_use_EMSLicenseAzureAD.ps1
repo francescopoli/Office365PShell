@@ -165,51 +165,10 @@ Get-AzureADGroupMember and Get-Mailbox are supported.")] $Users,
 )
 
 Begin{
-#region MSOnline Connection Check
-    If (!(Get-Command Get-AzureADUser) )
-    {
-        If ( !(Get-Module -ListAvailable AzureAD) )
-        { 
-            Write-Host "Azure AD Module required, trying to install..."
-            Install-Module -Name AzureAD  -Scope CurrentUser -Confirm
 
-            #Throw ("Try run the command again")
-        }
-        Write-Host "Connecting to AzureAD Powershell..."
-        $Error.Clear()
-        Import-Module AzureAD -Verbose:$false
-        Connect-AzureAD
-        If ($Error.Count -ge 1)
-        {
-            Write-Verbose "Failed to connect to AzureAD service. Exiting."
-            Write-Debug "Failed to connect to AzureAD. Exiting."
-            Throw ("Failed to connect to AzureAD service. Exiting.") 
-        }
-    }
-    
-    #EMS SKU from tenant
-    $Error.Clear()
-    $skuEMS = (Get-AzureADSubscribedSku -ErrorAction SilentlyContinue).where({$_.skupartnumber -like "EMS"})
-    $skuIdEMS = $skuEMS.AccountSkuId
-    If ($Error.Count -ge 1) 
-    {
-        $Error.Clear()
-        Write-Verbose "Failed to retrieve EMS SKU from Azure Active Directory, retrying..."
-        Write-Host "Connecting to MsOnline Powershell..."
-        Import-Module AzureAD -Verbose:$false
-        Connect-AzureAD
-        $skuEMS = (Get-AzureADSubscribedSku -ErrorAction SilentlyContinue).where({$_.skupartnumber -like "EMS"})
-        $skuIdEMS = $skuEMS.AccountSkuId
-        If ($Error.Count -ge 1)
-        {
-            Write-Verbose "Failed to connect to MSOnline service. Exiting."
-            Write-Debug "Failed to connect to MSOnline service. Exiting."
-            Throw ("Failed to connect to MSOnline service. Exiting.") 
-        }
-    }
-    Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
-   
-#endregion
+#region Session Variables
+    $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense #$_.skuid and $_.disabledplans
+    $licensePlan = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses #$_.addlicenses = $license
     
     # Available markets https://products.office.com/en/business/international-availability
     # not available in CU,IR,KP,SD,SY
@@ -226,12 +185,57 @@ Begin{
                  "VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES",`
                  "LK","SR","SJ","SZ","SE","CH","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",`
                  "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")
+#endregion
+#region AzureAD Connection Check
+    If (!(Get-Command Get-AzureADUser) )
+    {
+        If ( !(Get-Module -ListAvailable AzureAD) )
+        { 
+            Write-Host "[WARN] Azure AD Module required, trying to install..."
+            Install-Module -Name AzureAD  -Scope CurrentUser -Confirm
+
+            #Throw ("Try run the command again")
+        }
+     }
+       # Write-Host "Connecting to AzureAD Powershell..."
+       # $Error.Clear()
+       # Import-Module AzureAD -Verbose:$false
+       # Connect-AzureAD
+        #If ($Error.Count -ge 1)
+        #{
+        #    Write-Verbose "Failed to connect to AzureAD service. Exiting."
+        #    Write-Debug "Failed to connect to AzureAD. Exiting."
+        #    Throw ("Failed to connect to AzureAD service. Exiting.") 
+        #}
+       
+            #EMS SKU from tenant
+            $Error.Clear()
+            $skuEMS = (Get-AzureADSubscribedSku -ErrorAction SilentlyContinue).where({$_.skupartnumber -like "EMS"})
+            $license.SkuId = $skuEMS.SkuId
+            If ($Error.Count -ge 1) 
+            {
+                $Error.Clear()
+                Write-Verbose "[WARN] Failed to retrieve EMS SKU from Azure Active Directory, retrying..."
+                Write-Host "Connecting to AzureAD Powershell..."
+                Import-Module AzureAD -Verbose:$false
+                Connect-AzureAD
+                $skuEMS = (Get-AzureADSubscribedSku -ErrorAction SilentlyContinue).where({$_.skupartnumber -like "EMS"})
+                $license.SkuId = $skuEMS.SkuId
+                If ($Error.Count -ge 1)
+                {
+                    Write-Verbose "[ERR] Failed to connect to AzureAD PowerShell. Exiting."
+                    Write-Debug "[ERR] Failed to connect to Azure AD PowerShell. Exiting."
+                    Throw ("[ERR] Failed to connect to AzureAD PowerShell. Exiting.") 
+                }
+            }
+            Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
+     
+#endregion
+    
 
 #region Disabled Plans options
-    $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense #$_.skuid and $_.disabledplans
-    $licensePlan = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses
-
-    $license.SkuId = $skuIdEMS
+    
+    #$license.SkuId = $skuIdEMS
 
     $enabledPLans=@()
     $disabledPlans = @()
@@ -252,11 +256,11 @@ Begin{
         If ($disableIntune) {$disabledPlans+="INTUNE_A"} Else{$enabledPLans+="INTUNE_A"}
         If ($disableAADPremium) {$disabledPlans+="AAD_PREMIUM"} Else{$enabledPLans+="AAD_PREMIUM"}
         If ($disableMultiFactor) {$disabledPlans+="MFA_PREMIUM"} Else{$enabledPLans+="MFA_PREMIUM"}
-        If (($disabledPlans.count -eq $skuEMS.servicestatus.Count) -and $skuEMS )  
+        If (($disabledPlans.count -eq $skuEMS.ServicePlans.Count) -and $skuEMS )  
         {
             Write-Host "You are disabling all the $($disabledPlans.count) plans available with EMS. I will enforce the -RemoveEMSLicense to let you save the license for another user assignment."
             $RemoveEMSLicense = $true
-            $licensePlan.RemoveLicense = $skuIdEMS #to remove all, pass just the skuID of the required license pack
+            $licensePlan.RemoveLicense = $license.SkuId #to remove all, pass just the skuID of the required license pack
         }
         Else
         {
@@ -310,17 +314,56 @@ Process{
     [Bool]$shallStop = $false
     If (!($user -match "^[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}$"))
     {
+        Write-verbose "[ERR] `"$($user)`" is not a valid email address"
         Write-host -ForegroundColor red "`"$($user)`" is not a valid email address"
         $shallStop = $true
     }
     Else{
         # Validate if provided value match to an email address. Technically is not needed, because the Get-MSOLUser -searchstring witll
         # try to match the attribute with partial term, but i keep it for the sake of avoid multiple results upon search.
-        $userToLicense = Get-AzureADUser -SearchString $user
-        If (!$userToLicense)
+        $userToLicense = Get-AzureADUser -ObjectId $user
+        Write-verbose "Searching: `"$($user)`" using `"Get-AzureADUser -ObjectId $($user)`"."
+        If ($userToLicense)
         {
-            Write-host -ForegroundColor red "User: `"$($user)`" Not Found using Get-MsolUser."
-            $shallStop = $true
+           write-verbose "`"$($user)`" found."
+        }
+        else
+        {
+          Write-verbose "[WARN] User: `"$($user)`" Not Found using `"Get-AzureADUser -ObjectId $($user)`"."
+          Write-verbose "Searching: `"$($user)`" using `"Get-AzureADUser -SearchString $($user.split("@")[0])`"."
+          $userToLicense = Get-AzureADUser -SearchString $user.split("@")[0]
+          If ($userToLicense)
+          {
+             If ($userToLicense.count -lt 2)
+             {
+                write-verbose "`"$($user)`" with UserPrincipalName `"$($userToLicense.UserPrincipalName)`" found."
+             }
+             Else
+             {
+                ForEach ($candidate in $userToLicense)
+                {
+                    If ($candidate.ProxyAddresses -contains ("smtp:"+$user))
+                    {
+                        $userToLicense = $candidate;
+                        write-verbose "`"$($user)`" with UserPrincipalName `"$($userToLicense.UserPrincipalName)`" found matching Email Address:`"$(("smtp:"+$user))`"."
+                        $hasBeenFound=$true
+                        break;
+                    }
+                }
+                If (!$hasBeenFound)
+                {
+                   $shallStop = $true 
+                   Write-verbose "[ERR] User: `"$($user)`" Not Found matching UserPrincipalName or Email Addresses."
+                   Write-host -ForegroundColor red "User: `"$($user)`" Not Found matching UserPrincipalName or Email Addresses."
+                }
+             }
+          }   
+          Else
+          { 
+             $shallStop = $true 
+             Write-verbose "[ERR] User: `"$($user.split("@")[0])`" Not Found using `"Get-AzureADUser -SearchString $($user.split("@")[0])`"."
+             Write-host -ForegroundColor red "User: `"$($user.split("@")[0])`" Not Found using `"Get-AzureADUser -SearchString $($user.split("@")[0])`"."
+          }
         }
     }
 #endregion 
@@ -332,13 +375,13 @@ Process{
         If ($RemoveEMSLicense)
         {
             #remove the whole EMS Package
-            If ( $userToLicense.AssignedLicenses.Where({$_.skuid -like $skuIdEMS}) )
+            If ( $userToLicense.AssignedLicenses.Where({$_.skuid -like $license.SkuId}) )
             {
                 Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
                 Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
                 #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuIdEMS
             }
-            Else{ Write-Verbose "   User $($userToLicense.UserPrincipalName) has no $($skuIdEMS) license to remove." }
+            Else{ Write-Verbose "   User $($userToLicense.UserPrincipalName) has no $($license.SkuId) license to remove." }
         }
         Else
         {
@@ -433,7 +476,7 @@ Process{
             #If (!($userToLicense.AssignedLicenses))
             #{
                 # assigning license, location assingment should be succeded at this stage
-                Write-verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                Write-verbose "+++ Applying licenses: `"$($license.SkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                 Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
                 #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
             #} 
@@ -469,3 +512,6 @@ Process{
 End{ Write-Verbose "Completed"}
 
 }
+
+
+Set-EMSLicenseAzureAD exoonly@sub.contuso.com -DisableRMS -DisableAADPremium -Verbose
