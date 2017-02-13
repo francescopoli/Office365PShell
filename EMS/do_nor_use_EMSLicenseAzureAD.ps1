@@ -171,7 +171,7 @@ Begin{
     $licensePlan = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses #$_.addlicenses = $license
     $planNameToID = @{}
     # Available markets https://products.office.com/en/business/international-availability
-    # not available in CU,IR,KP,SD,SY
+    # not available in CU,IR,KP,SD,SY 
     $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
                  "BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI","CV",`
                  "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR",`
