@@ -169,7 +169,7 @@ Begin{
 #region Session Variables
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense #$_.skuid and $_.disabledplans
     $licensePlan = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses #$_.addlicenses = $license
-    
+    $planNameToID = @{}
     # Available markets https://products.office.com/en/business/international-availability
     # not available in CU,IR,KP,SD,SY
     $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
@@ -236,7 +236,10 @@ Begin{
 #region Disabled Plans options
     
     #$license.SkuId = $skuIdEMS
-
+    Foreach($p in $skuEMS.ServicePlans)
+    {
+       $planNameToID+=@{$p.ServicePlanName = $p.ServicePlanId} 
+    }
     $enabledPLans=@()
     $disabledPlans = @()
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
@@ -260,12 +263,13 @@ Begin{
         {
             Write-Host "You are disabling all the $($disabledPlans.count) plans available with EMS. I will enforce the -RemoveEMSLicense to let you save the license for another user assignment."
             $RemoveEMSLicense = $true
-            $licensePlan.RemoveLicense = $license.SkuId #to remove all, pass just the skuID of the required license pack
+            #$licensePlan.RemoveLicenses = $license.SkuId #to remove all, pass just the skuID of the required license pack
+            #$licensePlan.AddLicenses = $license
         }
         Else
         {
             #if nothing to be disabled, then consider all to be enabled, so passing an empty $disabledPlan is legit
-            $license.DisabledPlans = $disabledPlans
+            $license.DisabledPlans += foreach($planId in $disabledPlans){$planNameToID."$($planId)"} 
             $licensePlan.AddLicenses = $license
             if ( $disabledPlans.Length -gt 0)
             {
@@ -378,6 +382,7 @@ Process{
             If ( $userToLicense.AssignedLicenses.Where({$_.skuid -like $license.SkuId}) )
             {
                 Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
+                $licensePlan.RemoveLicenses = $license.SkuId #to remove all, pass just the skuID of the required license pack
                 Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
                 #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuIdEMS
             }
@@ -514,4 +519,4 @@ End{ Write-Verbose "Completed"}
 }
 
 
-Set-EMSLicenseAzureAD exoonly@sub.contuso.com -DisableRMS -DisableAADPremium -Verbose
+Set-EMSLicenseAzureAD exoonly@sub.contuso.com -DisableAADPremium -Verbose
