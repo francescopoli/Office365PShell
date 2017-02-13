@@ -99,8 +99,8 @@
     
     
     .EXAMPLE
-    Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup GroupName).ExternalDirectoryObjectId | Set-EMSLicense
-    License all users in an Office365 Group for all plans
+    Get-MsolGroupMember -GroupObjectId (Get-UnifiedGroup -SearchString GroupName).ExternalDirectoryObjectId | Set-EMSLicense -DisableAADPremium
+    License all users in an Office365 Unified Group for all plans (Unified groups requires Exchange Online PowerShell session)
     
    
     .EXAMPLE
@@ -165,26 +165,53 @@ Get-MsolGroupMember and Get-Mailbox are supported.")] $Users,
 )
 
 Begin{
+
+#region Session Variables
+
+    # Available markets https://products.office.com/en/business/international-availability
+    # not available in CU,IR,KP,SD,SY
+    $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
+                 "BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI","CV",`
+                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR",`
+                 "CW","CY","CZ","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","ET","FK","FO","FJ","FI","FR",`
+                 "GF","PF","TF","GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",`
+                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IQ","IE","IM","IL","IT","JM","JP","JE","JO",`
+                 "KZ","KE","KI","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",`
+                 "MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ",`
+                 "MM","NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MP","NO","OM","PK","PW","PS","PA",`
+                 "PG","PY","PE","PH","PN","PL","PT","PR","QA","RE","RO","RU","RW","BL","SH","KN","LC","MF","PM",`
+                 "VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES",`
+                 "LK","SR","SJ","SZ","SE","CH","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",`
+                 "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")
+    $enabledPLans=@()
+    $disabledPlans = @()
+#endregion
+
 #region MSOnline Connection Check
     If (!(Get-Command Get-MsolUser) )
     {
-        If ( !(Get-Module -ListAvailable MSOnline) ){ Write-Host "Azure AD Module required, please install from: https://technet.microsoft.com/en-us/library/dn975125.aspx "}
-        Else 
-        {
-            Write-Host "Connecting to MsOnline Powershell..."
-            $Error.Clear()
-            Import-Module MSOnline -Verbose:$false
-            Connect-MsolService
-            If ($Error.Count -ge 1)
-            {
-                Write-Verbose "Failed to connect to MSOnline service. Exiting."
-                Write-Debug "Failed to connect to MSOnline. Exiting."
-                Throw ("Failed to connect to MSOnline service. Exiting.") 
-            }
+        If ( !(Get-Module -ListAvailable MSOnline) )
+        { 
+            Write-verbose "Azure AD Module required, please install from: https://technet.microsoft.com/en-us/library/dn975125.aspx "
+            Throw ("Azure AD Module required, please install from: https://technet.microsoft.com/en-us/library/dn975125.aspx ")
         }
-    }
-    else
-    {
+     }
+     #   Else 
+     #   {
+     #       Write-Host "Connecting to MsOnline Powershell..."
+     #       $Error.Clear()
+     #       Import-Module MSOnline -Verbose:$false
+     #       Connect-MsolService
+     #       If ($Error.Count -ge 1)
+     #       {
+     #           Write-Verbose "Failed to connect to MSOnline service. Exiting."
+     #           Write-Debug "Failed to connect to MSOnline. Exiting."
+     #           Throw ("Failed to connect to MSOnline service. Exiting.") 
+     #       }
+     #   }
+    #}
+    #else
+    #{
         #EMS SKU from tenant
         $Error.Clear()
         $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
@@ -206,28 +233,11 @@ Begin{
             }
         }
         Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
-    }
+    #}
 #endregion
     
-    # Available markets https://products.office.com/en/business/international-availability
-    # not available in CU,IR,KP,SD,SY
-    $validCountryCodes = @("AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD", `
-                 "BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI","CV",`
-                 "KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","CI","HR",`
-                 "CW","CY","CZ","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","ET","FK","FO","FJ","FI","FR",`
-                 "GF","PF","TF","GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",`
-                 "HT","HM","VA","HN","HK","HU","IS","IN","ID","IQ","IE","IM","IL","IT","JM","JP","JE","JO",`
-                 "KZ","KE","KI","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MK","MG",`
-                 "MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ",`
-                 "MM","NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MP","NO","OM","PK","PW","PS","PA",`
-                 "PG","PY","PE","PH","PN","PL","PT","PR","QA","RE","RO","RU","RW","BL","SH","KN","LC","MF","PM",`
-                 "VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES",`
-                 "LK","SR","SJ","SZ","SE","CH","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR",`
-                 "TM","TC","TV","UG","UA","AE","GB","UM","US","UY","UZ","VU","VE","VN","VG","VI","WF","EH","YE","ZM","ZW")
-
 #region Disabled Plans options
-    $enabledPLans=@()
-    $disabledPlans = @()
+
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
         
     If (!$RemoveEMSLicense){
@@ -326,9 +336,9 @@ Process{
             If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
             {
                 Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
-                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuIdEMS
+                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuEMS.AccountSkuId
             }
-            Else{ Write-Verbose "   User $($userToLicense.UserPrincipalName) has no $($skuIdEMS) license to remove." }
+            Else{ Write-Verbose "   User $($userToLicense.UserPrincipalName) has no $($skuEMS.AccountSkuId) license to remove." }
         }
         Else
         {
@@ -421,8 +431,8 @@ Process{
             If (!($userToLicense.Licenses))
             {
                 # assigning license, location assingment should be succeded at this stage
-                Write-verbose "/// Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
-                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
+                Write-verbose "/// Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuEMS.AccountSkuId -LicenseOptions $ExcludedLicenses
             } 
             Else 
             {
@@ -431,15 +441,15 @@ Process{
                 {
                     # EMS license present, no need to use the -addLicense parameter
                     #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-                    Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                    Write-Verbose "+++ Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
                 }
                 Else
                 {
                     # if not EMS license, then pass the -addLicenses paramter too
                     #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-                    Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
-                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
+                    Write-Verbose "+++ Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                    Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuEMS.AccountSkuId -LicenseOptions $ExcludedLicenses
                 }
             }               
 #endregion
