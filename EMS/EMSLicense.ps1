@@ -431,7 +431,7 @@ Process{
             If (!($userToLicense.Licenses))
             {
                 # assigning license, location assingment should be succeded at this stage
-                Write-verbose "/// Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
+                Write-verbose "+++ Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuEMS.AccountSkuId -LicenseOptions $ExcludedLicenses
             } 
             Else 
