@@ -1,13 +1,14 @@
 #EMS folder
-Working:
+##Working:##
 
-EMSlicense.ps1 - Powershell module to assign\disable EMS plans in a Office365 EMS Sku
+**EMSlicense.ps1 - Powershell module to assign\disable EMS plans in a Office365 EMS Sku
 
-EMSLicense.usage.txt - usage notes
+**EMSLicense.usage.txt** - usage notes
 
 
-In Dev:
+##To Be Tested##
 
-do_nor_use_EMSLicenseAzureAD.ps1 - using AzureAD Pshell - in dev, not working at the moment -not stable -
+**EMSLicenseAzureAD.ps1** - using AzureAD Pshell - Seems to be working, need to be tested
+	to do: add template user usage (copy licenses plan from a user, using command line)
 
-azureADLicensesNotes.txt - some notes for me
+**azureADLicensesNotes.txt** - some notes for me
