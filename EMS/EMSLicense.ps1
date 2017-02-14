@@ -465,4 +465,3 @@ End{ Write-Verbose "Completed"}
 
 }
 
-Set-EMSLicense AdrianaN@MOD816158.onmicrosoft.com -DisableRMS -Verbose

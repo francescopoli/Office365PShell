@@ -520,4 +520,3 @@ End{ Write-Verbose "Completed"}
 }
 
 
-Set-EMSLicenseAzureAD AdrianaN@MOD816158.onmicrosoft.com -RemoveEMSLicense -Verbose

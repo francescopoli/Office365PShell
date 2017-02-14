@@ -21,19 +21,6 @@ SkuId         Property   string SkuId {get;set;}
     Set-AzureADUserLicense -ObjectId $user.ObjectId -AssignedLicenses $licenses
 
 
-PS C:\Users\fpoli> $licenses | Get-Member
-   TypeName: Microsoft.Open.AzureAD.Model.AssignedLicenses
-Name           MemberType Definition
-----           ---------- ----------
-Equals         Method     bool Equals(System.Object obj), bool Equals(Microsoft.Open.AzureAD.Model.AssignedLicenses ...
-GetHashCode    Method     int GetHashCode()
-GetType        Method     type GetType()
-ToJson         Method     string ToJson()
-ToString       Method     string ToString()
-Validate       Method     System.Collections.Generic.IEnumerable[System.ComponentModel.DataAnnotations.ValidationRes...
-AddLicenses    Property   System.Collections.Generic.List[Microsoft.Open.AzureAD.Model.AssignedLicense] AddLicenses ...
-RemoveLicenses Property   System.Collections.Generic.List[string] RemoveLicenses {get;set;}
-
 
 PS C:\Users\fpoli> $license | Get-Member
    TypeName: Microsoft.Open.AzureAD.Model.AssignedLicense
@@ -47,3 +34,17 @@ ToString      Method     string ToString()
 Validate      Method     System.Collections.Generic.IEnumerable[System.ComponentModel.DataAnnotations.ValidationResu...
 DisabledPlans Property   System.Collections.Generic.List[string] DisabledPlans {get;set;}
 SkuId         Property   string SkuId {get;set;}
+
+
+PS C:\Users\fpoli> $licenses | Get-Member
+   TypeName: Microsoft.Open.AzureAD.Model.AssignedLicenses
+Name           MemberType Definition
+----           ---------- ----------
+Equals         Method     bool Equals(System.Object obj), bool Equals(Microsoft.Open.AzureAD.Model.AssignedLicenses ...
+GetHashCode    Method     int GetHashCode()
+GetType        Method     type GetType()
+ToJson         Method     string ToJson()
+ToString       Method     string ToString()
+Validate       Method     System.Collections.Generic.IEnumerable[System.ComponentModel.DataAnnotations.ValidationRes...
+AddLicenses    Property   System.Collections.Generic.List[Microsoft.Open.AzureAD.Model.AssignedLicense] AddLicenses ...
+RemoveLicenses Property   System.Collections.Generic.List[string] RemoveLicenses {get;set;}
