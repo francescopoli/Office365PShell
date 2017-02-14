@@ -56,12 +56,12 @@
 
     .PARAMETER DisableRMS
     Disable plan RMS_S_PREMIUM -> Azure Rights Management
-    If this parameter is used, it will trigger the DisableAzureIRM too, reason is that Azure Information Protection depends on AT LEAST 
+    If this parameter is used, it will trigger the DisableAzureIP too, reason is that Azure Information Protection depends on AT LEAST 
     an assigned Azure Rights Management plan, even if in any other SKU (like the Enterprise). Here assuming that if RMS is to be disabled, there
     is not wish to use it from an another plan, so will be unlikely the Azure Infomrmation Protection will be used too.
     Please note that the RMSBASIC (-> Right Management Adhoc) in Office365 portal is not enough for the RMS_S_ENTERPRISE plan to be enabled.
 
-    .PARAMETER DisableAzureIRM
+    .PARAMETER DisableAzureIP
     Disable plan RMS_S_ENTERPRISE - Azure Information Protection Plan 1
 
     .PARAMETER DisableIntune
@@ -80,7 +80,7 @@
     Debug output for console
         
     .EXAMPLE
-    Set-EMSLicense user@contoso.com -DisableAzureIRM -DisableRMS -DisableMultiFactor -usageLocation IT   
+    Set-EMSLicense user@contoso.com -DisableAzureIP -DisableRMS -DisableMultiFactor -usageLocation IT   
     License a single and Set-EMSLicense Italy as user location
     
     .EXAMPLE
@@ -120,7 +120,7 @@
                 User,usageLocation 
 
     .EXAMPLE
-    Set-EMSLicense user@contoso.com -disableAzureIRM -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
+    Set-EMSLicense user@contoso.com -disableAzureIP -disableMultiFactor -DisableRMS -DisableIntune -DisableAADPremium
     PS C:\>Set-EMSLicense user@contoso.com -RemoveEMSLicense
     Remove all licenses from a user
 
@@ -138,9 +138,9 @@ Get-AzureADGroupMember and Get-Mailbox are supported.")] $Users,
     [parameter(Mandatory=$false)]
     [switch] $RemoveEMSLicense, #remove all EMS SKU
     [parameter(Mandatory=$false)]
-    [switch] $DisableRMS,#RMS_S_PREMIUM - Azure Rights Management 
+    [switch] $DisableRMS, #RMS_S_ENTERPRISE- Azure Rights Management 
     [parameter(Mandatory=$false)]
-    [switch] $DisableAzureIRM, #RMS_S_ENTERPRISE - Azure Information Protection Plan 1 
+    [switch] $DisableAzureIP, #RMS_S_PREMIUM - Azure Information Protection Plan 1 
     [parameter(Mandatory=$false)]
     [switch] $DisableIntune, #INTUNE_A - Intune A Direct 
     [parameter(Mandatory=$false)]
@@ -245,7 +245,7 @@ Begin{
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
         
     If (!$RemoveEMSLicense){
-        If ($DisableAzureIRM)
+         If ($DisableAzureIP)
         {
             # Azure Information Protection depends on AT LEAST an assigned Azure Rights Management plans (except for Right Management Adhoc), if this to be enabled, then enable also RMS Premium
             $disabledPlans+="RMS_S_ENTERPRISE"
@@ -271,6 +271,7 @@ Begin{
             #if nothing to be disabled, then consider all to be enabled, so passing an empty $disabledPlan is legit
             $license.DisabledPlans += foreach($planId in $disabledPlans){$planNameToID."$($planId)"} 
             $licensePlan.AddLicenses = $license
+            $licensePlan.RemoveLicenses = @{}
             if ( $disabledPlans.Length -gt 0)
             {
                #Write-Verbose "Following plans will be disabled: $($disabledPlans)"
@@ -519,4 +520,4 @@ End{ Write-Verbose "Completed"}
 }
 
 
-Set-EMSLicenseAzureAD exoonly@sub.contuso.com -DisableAADPremium -Verbose
+Set-EMSLicenseAzureAD AdrianaN@MOD816158.onmicrosoft.com -RemoveEMSLicense -Verbose

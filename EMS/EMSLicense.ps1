@@ -138,9 +138,9 @@ Get-MsolGroupMember and Get-Mailbox are supported.")] $Users,
     [parameter(Mandatory=$false)]
     [switch] $RemoveEMSLicense, #remove all EMS SKU
     [parameter(Mandatory=$false)]
-    [switch] $DisableRMS,#RMS_S_PREMIUM - Azure Rights Management 
+    [switch] $DisableRMS, #RMS_S_ENTERPRISE- Azure Rights Management 
     [parameter(Mandatory=$false)]
-    [switch] $DisableAzureIP, #RMS_S_ENTERPRISE - Azure Information Protection Plan 1 
+    [switch] $DisableAzureIP, #RMS_S_PREMIUM - Azure Information Protection Plan 1 
     [parameter(Mandatory=$false)]
     [switch] $DisableIntune, #INTUNE_A - Intune A Direct 
     [parameter(Mandatory=$false)]
@@ -241,7 +241,7 @@ Begin{
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
         
     If (!$RemoveEMSLicense){
-        If ($DisableAzureIP)
+         If ($DisableAzureIP)
         {
             # Azure Information Protection depends on AT LEAST an assigned Azure Rights Management plans (except for Right Management Adhoc), if this to be enabled, then enable also RMS Premium
             $disabledPlans+="RMS_S_ENTERPRISE"
@@ -464,3 +464,5 @@ Process{
 End{ Write-Verbose "Completed"}
 
 }
+
+Set-EMSLicense AdrianaN@MOD816158.onmicrosoft.com -DisableRMS -Verbose
