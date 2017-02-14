@@ -1,7 +1,7 @@
 #EMS folder
 ##Working:##
 
-**EMSlicense.ps1 - Powershell module to assign\disable EMS plans in a Office365 EMS Sku
+**EMSlicense.ps1** - Powershell module to assign\disable EMS plans in a Office365 EMS Sku
 
 **EMSLicense.usage.txt** - usage notes
 
