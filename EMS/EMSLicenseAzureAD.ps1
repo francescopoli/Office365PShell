@@ -1,7 +1,8 @@
-﻿Function Set-EMSLicenseAzureAD{
+﻿Function Set-EMSLicense{
 <#       
     .SYNOPSIS
     Set-EMSLicense is to facilitate licenses assignment process for Office 365 EMS SKU.
+    AzureAD module version
 
     .DESCRIPTION
     Provide instrumentation to:
@@ -31,8 +32,8 @@
 	
     Require
         Windows Azure Active Directory Module
-        Connect to Office 365 PowerShell
-        https://technet.microsoft.com/en-us/library/dn975125.aspx
+        Will try to install from Powershell Gallery if not present, using this command
+        Install-Module -Name AzureAD  -Scope CurrentUser -Confirm
 
     For usage guidelines:
          get-help Set-EMSLicense -examples
