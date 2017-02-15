@@ -7,8 +7,11 @@ Run
 Set-location [path where you saved the module]
 #dot source the script to import the function
 . .\EMSLicense.ps1
+or
+. .\EMSLicenseAzureAD.ps1
 
 To Start:
+assign all EMS licenses to a user
 Set-EMSLicense user@contoso.com -verbose
 
 For Help:
@@ -19,3 +22,7 @@ Requirements:
 Windows Azure Active Directory Module
 Connect to Office 365 PowerShell
 https://technet.microsoft.com/en-us/library/dn975125.aspx
+
+or
+Microsoft Azure AD PowerShell module
+Install-Module -Name AzureAD  -Scope CurrentUser -Confirm
