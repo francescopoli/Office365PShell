@@ -196,44 +196,28 @@ Begin{
             Throw ("Azure AD Module required, please install from: https://technet.microsoft.com/en-us/library/dn975125.aspx ")
         }
      }
-     #   Else 
-     #   {
-     #       Write-Host "Connecting to MsOnline Powershell..."
-     #       $Error.Clear()
-     #       Import-Module MSOnline -Verbose:$false
-     #       Connect-MsolService
-     #       If ($Error.Count -ge 1)
-     #       {
-     #           Write-Verbose "Failed to connect to MSOnline service. Exiting."
-     #           Write-Debug "Failed to connect to MSOnline. Exiting."
-     #           Throw ("Failed to connect to MSOnline service. Exiting.") 
-     #       }
-     #   }
-    #}
-    #else
-    #{
-        #EMS SKU from tenant
+
+    $Error.Clear()
+    $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
+    $skuIdEMS = $skuEMS.AccountSkuId
+    If ($Error.Count -ge 1) 
+    {
         $Error.Clear()
+        Write-Verbose "Failed to retrieve EMS SKU from Azure Active Directory, retrying..."
+        Write-Host "Connecting to MsOnline Powershell..."
+        Import-Module MSOnline -Verbose:$false
+        Connect-MsolService 
         $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
         $skuIdEMS = $skuEMS.AccountSkuId
-        If ($Error.Count -ge 1) 
+        If ($Error.Count -ge 1)
         {
-            $Error.Clear()
-            Write-Verbose "Failed to retrieve EMS SKU from Azure Active Directory, retrying..."
-            Write-Host "Connecting to MsOnline Powershell..."
-            Import-Module MSOnline -Verbose:$false
-            Connect-MsolService 
-            $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
-            $skuIdEMS = $skuEMS.AccountSkuId
-            If ($Error.Count -ge 1)
-            {
-                Write-Verbose "Failed to connect to MSOnline service. Exiting."
-                Write-Debug "Failed to connect to MSOnline service. Exiting."
-                Throw ("Failed to connect to MSOnline service. Exiting.") 
-            }
+            Write-Verbose "Failed to connect to MSOnline service. Exiting."
+            Write-Debug "Failed to connect to MSOnline service. Exiting."
+            Throw ("Failed to connect to MSOnline service. Exiting.") 
         }
-        Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
-    #}
+    }
+    Write-Verbose "Retrieved EMS SKU from your subscription: $($skuIdEMS)"
+   
 #endregion
     
 #region Disabled Plans options
@@ -241,7 +225,7 @@ Begin{
         #available Plans in EMS sku: RMS_S_PREMIUM,INTUNE_A,RMS_S_ENTERPRISE,AAD_PREMIUM,MFA_PREMIUM
         
     If (!$RemoveEMSLicense){
-         If ($DisableAzureIP)
+        If ($DisableAzureIP)
         {
             # Azure Information Protection depends on AT LEAST an assigned Azure Rights Management plans (except for Right Management Adhoc), if this to be enabled, then enable also RMS Premium
             $disabledPlans+="RMS_S_ENTERPRISE"
@@ -264,7 +248,7 @@ Begin{
         {
             #if nothing to be disabled, then consider all to be enabled, so passing an empty $disabledPlan is legit
             $ExcludedLicenses = New-MsolLicenseOptions -AccountSkuId $skuIdEMS -DisabledPlans $disabledPlans
-            if ( $disabledPlans.Length -gt 0)
+            If ( $disabledPlans.Length -gt 0)
             {
                #Write-Verbose "Following plans will be disabled: $($disabledPlans)"
                Write-Verbose "|--- DISABLED PLANS: $($disabledPlans)" 
@@ -274,10 +258,8 @@ Begin{
             {
                 Write-Verbose "No plans to disable, enabling `'em all: $($enabledPlans)"
             }
-        }
-
-
-    }
+        }  
+    } #end If !RemovedEMSLicense
     #endregion
 }
 
@@ -317,6 +299,7 @@ Process{
     Else{
         # Validate if provided value match to an email address. Technically is not needed, because the Get-MSOLUser -searchstring witll
         # try to match the attribute with partial term, but i keep it for the sake of avoid multiple results upon search.
+      
         $userToLicense = Get-MsolUser -SearchString $user
         If (!$userToLicense)
         {
@@ -325,8 +308,6 @@ Process{
         }
     }
 #endregion 
-
-
 
     If( !($shallStop) )    {
 
@@ -408,7 +389,7 @@ Process{
                        $location = $companyLocation
                        Write-Verbose "Using location: $($location)"
                     }
-                }
+                } # end if empty location
     
                 Try{
                     Write-Verbose "Assigning user location: `"$($location)`" to `"$($userToLicense.UserPrincipalName)`""
@@ -420,11 +401,10 @@ Process{
             }     
             Else
             {
-                # for sake of honesty, this line is useless as the location will not be used anylonger aferward in the code
+                # for sake of honesty, this line is useless as the location will not be used any longer afterward in the code
                 #$location = $userToLicense.usageLocation
-            } 
-    
-#endregion
+            }    
+#endregion usageLocation validation
 
 #region Plans management 
 
@@ -451,16 +431,16 @@ Process{
                     Write-Verbose "+++ Applying licenses: `"$($skuEMS.AccountSkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                     Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuEMS.AccountSkuId -LicenseOptions $ExcludedLicenses
                 }
-            }               
-#endregion
-        }
-    } #end if $shallStop    
+            }#end Else !($userToLicense.Licenses)              
+#endregion Plans management
+        } #end Else $RemoveEMSLicense
+    } #end if !($shallStop)   
     Else
     { 
         #Write-host -ForegroundColor red "$user is not a valid email address"
     }
 }
 
-End{ Write-Verbose "Completed"}
+End{ Write-Verbose "Completed" }
 
-}
+} #end function
