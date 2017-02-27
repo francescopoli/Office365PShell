@@ -3,7 +3,8 @@
 
 **EMSlicense.ps1** - Powershell module to assign\disable EMS plans in a Office365 EMS Sku
 
-this one use the azureAD pshell module instead of the msonline
+This one use the azureAD pshell module instead of the msonline:
+
 **EMSLicenseAzureAD.ps1** - using AzureAD Pshell - Seems to be working stable.
 	to do: add template user usage (copy licenses plan from a user, using command line)
 
