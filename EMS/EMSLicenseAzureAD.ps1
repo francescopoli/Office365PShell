@@ -39,7 +39,7 @@
          get-help Set-EMSLicense -examples
     
 
-	Author: Francesco Poli fpoli@microsoft.com
+	Author: Francesco Poli fpoli@outlook.com
 	
     .PARAMETER Users
      Single user object in valid smtp address format user@contoso.com or collection of objects from CSV file or pipeline input.
