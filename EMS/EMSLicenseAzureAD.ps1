@@ -381,7 +381,7 @@ Process{
         If ($RemoveEMSLicense)
         {
             #remove the whole EMS Package
-            If ( $userToLicense.AssignedLicenses.Where({$_.skuid -like $license.SkuId}) )
+            If ( ( $userToLicense.AssignedLicenses | Where{$_.skuid -like $license.SkuId}) )
             {
                 Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
                 $licensePlan.RemoveLicenses = $license.SkuId #to remove all, pass just the skuID of the required license pack
@@ -478,35 +478,10 @@ Process{
 
 #region Plans management 
 
-#this part need to be completely restructured from the AzureAD perspective, the license assignment is not likely to have the same
-#behavior (aka not require anymore 2 parameters addlicenses and disabledPlans, so this block has to be flattered
-            #If (!($userToLicense.AssignedLicenses))
-            #{
                 # assigning license, location assingment should be succeded at this stage
                 Write-verbose "+++ Applying licenses: `"$($license.SkuId)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
                 Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
-                #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
-            #} 
-           # Else 
-           # {
-            # if user has any licenses he may not have the EMS one already, or he may have but without assigned plans
-           #     If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
-           #     {
-           #         # EMS license present, no need to use the -addLicense parameter
-            #        #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-           #         Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
-            #        Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
-           #         #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -LicenseOptions $ExcludedLicenses
-            #    }
-            #    Else
-            #    {
-            #        # if not EMS license, then pass the -addLicenses paramter too
-            #        #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )
-            #        Write-Verbose "+++ Applying licenses: `"$($skuIdEMS)`" to `"$($userToLicense.UserPrincipalName)`" +($($enabledPlans)) -($($disabledPlans))"
-           #         Set-AzureADUserLicense -ObjectId $userToLicense.ObjectId -AssignedLicenses $licensePlan
-           #         #Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -AddLicenses $skuIdEMS -LicenseOptions $ExcludedLicenses
-           #     }
-           # }               
+                   
 #endregion
         }
     } #end if $shallStop    

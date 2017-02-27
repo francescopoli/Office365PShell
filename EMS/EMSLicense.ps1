@@ -198,7 +198,7 @@ Begin{
      }
 
     $Error.Clear()
-    $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
+    $skuEMS = Get-MsolAccountSku -ErrorAction SilentlyContinue | where {$_.accountSkuId -like "*:EMS"}
     $skuIdEMS = $skuEMS.AccountSkuId
     If ($Error.Count -ge 1) 
     {
@@ -207,7 +207,7 @@ Begin{
         Write-Host "Connecting to MsOnline Powershell..."
         Import-Module MSOnline -Verbose:$false
         Connect-MsolService 
-        $skuEMS = (Get-MsolAccountSku -ErrorAction SilentlyContinue).where({$_.accountSkuId -like "*:EMS"})
+        $skuEMS = Get-MsolAccountSku -ErrorAction SilentlyContinue | where {$_.accountSkuId -like "*:EMS"}
         $skuIdEMS = $skuEMS.AccountSkuId
         If ($Error.Count -ge 1)
         {
@@ -314,7 +314,7 @@ Process{
         If ($RemoveEMSLicense)
         {
             #remove the whole EMS Package
-            If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
+            If ( ($userToLicense.Licenses | Where {$_.accountskuid -like "*:ems"} ) )
             {
                 Write-Verbose "--- Removing EMS license from: $($userToLicense.UserPrincipalName)"
                 Set-MsolUserLicense -UserPrincipalName $userToLicense.UserPrincipalName -RemoveLicenses $skuEMS.AccountSkuId
@@ -417,7 +417,7 @@ Process{
             Else 
             {
             # if user has any licenses he may not have the EMS one already, or he may have but without assigned plans
-                If ( $userToLicense.Licenses.Where({$_.accountskuid -like "*:ems"}) )
+                If ( ($userToLicense.Licenses | Where{$_.accountskuid -like "*:ems"}) )
                 {
                     # EMS license present, no need to use the -addLicense parameter
                     #Write-verbose ("Assigning licenses: `"{0}`" to `"{1}`"" -f $($skuIdEMS),$($userToLicense.UserPrincipalName) )

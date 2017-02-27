@@ -26,3 +26,6 @@ https://technet.microsoft.com/en-us/library/dn975125.aspx
 or
 Microsoft Azure AD PowerShell module
 Install-Module -Name AzureAD  -Scope CurrentUser -Confirm
+
+
+Code backported to Pshell 3 (no longer require Pshell5 due to some constructs)
