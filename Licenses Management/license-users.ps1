@@ -65,7 +65,7 @@ Param (
         If ($Error.Count -ge 1) {
 
             $Error.Clear()
-            Write-Host "Connessione ad AzureAD Powershell..."
+            Write-Host "Connecting to AzureAD Powershell..."
         
             Import-Module AzureAD -Verbose:$false
             Connect-AzureAD -LogLevel None | Out-Null

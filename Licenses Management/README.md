@@ -7,7 +7,7 @@ For admins who need to assign Office365 licenses and do not have an Azure P1 pla
 
 This script will let you input a CSV file containig a list of users and relative template user for licensing mirroring.
 
-#### Usage:
+#### Usage <br>
 * Configure a user with the required licenses, like E5 Plan and activate desiders workloads, like Exchange,SharePoint and Office(or all, not limiting)
 
 * Create a CSV file with this format<br>
@@ -21,13 +21,14 @@ This script will let you input a CSV file containig a list of users and relative
     * `License-Users -CSVFile c:\temp\users.csv -UsageLocation AU`
     * `License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp`
     * `License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp -UsageLocation AU`
- <br>
 
-##### -CSVFile [path]\file.csv<br> 
+
+#### Parameters <br>
+
+###### -CSVFile [path]\file.csv<br> 
 The only "required" parameter is the -CSVFile, but check UsageLocation
 
-
-##### -UsageLocation AU<br> 
+###### -UsageLocation AU<br> 
 It is the UsageLocation parameter in Get-ADUser or Get-MsolUser.
 UsageLocation is a must have for a user to be able to receive a license, so the script will check if the AD User in Office365 already has it.
 You have multiple options here:
@@ -40,6 +41,11 @@ You have multiple options here:
     * Script will check anyway for each user if it is present, if it will be the case, then no action will be required, else you will prompted to enter the country code and asked if you want to use the provided one as the default for all the users missing it. <br> 
     If you refuse to use it as default, you will get a prompt for each one missing.
 
-##### -LogDirectory <br>
+###### -LogDirectory <br>
 Script will try to create the directory if non existent, if provided a log with the following name format will be created upon execution `YYYY-MM-DD_HH-MM_Licenses.log` ---> `2018-08-13_15-39_Licenses.log`
 
+
+#### Prerequisites <br>
+Script uses the AzureAD Powershell, if you haven`t installed the module, just: <br>
+* Open a Powershell Session with Run as Administrator
+* Install the module using `Install-Module -Name AzureAD -Confirm:$false` (from PowerShell repository)
