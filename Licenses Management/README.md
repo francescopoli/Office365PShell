@@ -10,7 +10,7 @@ This script will let you input a CSV file containig a list of users and relative
 #### Usage:
 * Configure a user with the required licenses, like E5 Plan and activate desiders workloads, like Exchange,SharePoint and Office(or all, not limiting)
 
-* Create a CSV file with this format:
+* Create a CSV file with this format<br>
     EmailAddress | TemplateEmail | UsageLocation [Optional]
     ------------ | ------------- | -------------  
     Content from cell 1 | Content from cell 2 | 2 letters Country Code [ Optional]
@@ -47,6 +47,6 @@ You have multiple options here:
     * Script will check anyway for each user if it is present, if it will be the case, then no action will be required, else you will prompted to enter the country code and asked if you want to use the provided one as the default for all the users missing it. <br> 
     If you refuse to use it as default, you will get a prompt for each one missing.
 
-##### -LogDirectory: <br>
+##### -LogDirectory <br>
 Script will try to create the directory if non existent, if provided a log with the following name format will be created upon execution `YYYY-MM-DD_HH-MM_Licenses.log` ---> `2018-08-13_15-39_Licenses.log`
 
