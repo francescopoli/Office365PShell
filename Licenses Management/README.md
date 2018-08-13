@@ -11,8 +11,8 @@ This script will let you input a CSV file containig a list of users and relative
 * Configure a user with the required licenses, like E5 Plan and activate desiders workloads, like Exchange,SharePoint and Office(or all, not limiting)
 
 * Create a CSV file with this format<br>
-EmailAddress | TemplateEmail | [Optional] UsageLocation 
------------- | ------------- | -------------  
+EmailAddress | TemplateEmail | [Optional] UsageLocation
+------------ | ------------- | -------------
 user@contos.com | template@contoso.com | [Optional] 2 letters Country Code
 
     ##### CSV <br>
