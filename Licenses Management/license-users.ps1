@@ -88,6 +88,7 @@
     
 
     .EXAMPLE
+    License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp -UsageLocation AU
     Assign licenses using the mapping CSV file and try to assign Australia as UsageLocation when missing on the user, and generate the log in c:\temp
 
 #>
