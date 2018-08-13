@@ -100,7 +100,7 @@ Param (
         Write-Host " "
         Write-Host "------ START LICENSES ASSIGNMENT ------"
         Write-Host " "
-        $CountryCode = $null#Country code for the UsageLocation (mandatory)
+        $CountryCode = $null #Country code for the UsageLocation (mandatory)
         if ($UsageLocation) {$DefaultCountryCode = $UsageLocation}
         else {$DefaultCountryCode = $null}
         
@@ -120,7 +120,7 @@ Param (
             else{
                 $LogDirectory = Get-Item $LogDirectory
                 $date = Get-Date
-                $LogName = "$($date.Year)-$($date.Month)-$($date.Day)_$($date.Hour)-$($date.Minute)-Log_Licenze.txt"
+                $LogName = "$($date.Year)-$($date.Month)-$($date.Day)_$($date.Hour)-$($date.Minute)_Licenses.Log"
                 if (!(Test-Path -Path ($LogDirectory.FullName + "\" + $LogName) )){
                     New-Item -ItemType File -Path $LogDirectory -Name $LogName | Out-Null
                 }
@@ -159,8 +159,8 @@ Param (
             #Check user location
             $utenteAD = Get-AzureADUser -ObjectId $TargetUser
             if ( $utenteAD.UsageLocation -eq $null ) {
-                if ($CountryCode -eq $null) {Write-Host "null"
-                    if ($DefaultCountryCode -eq $null){Write-Host "null"
+                if ($CountryCode -eq $null) {
+                    if ($DefaultCountryCode -eq $null){
                         Write-Host "UsageLocation must be set on the user to be able to assing a license"
                         $reAsk = $true
                         while ($reAsk) {
