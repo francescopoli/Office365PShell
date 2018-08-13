@@ -14,7 +14,83 @@
     has been advised of the possibility of such damages.
     ###############Disclaimer#####################################################
 #>
+<#       
+    .SYNOPSIS
+    License-Users For admins who need to assign Office365 licenses and do not have 
+    an Azure P1 plan (Cannot use the group license assignment feature)
 
+    .DESCRIPTION
+    For admins who need to assign Office365 licenses and do not have an 
+    Azure P1 plan (Cannot use the group license assignment feature).
+
+    This script will let you input a CSV file containig a list of users 
+    and relative template user for licensing mirroring.
+    
+    Usage
+    * Configure a user with the required licenses, like E5 Plan and activate 
+    desiders workloads, like Exchange,SharePoint and Office(or all, not limiting...)
+
+    * Create a CSV file with this format
+    EmailAddress,TemplateEmail,UsageLocation
+    user@contoso.com,Template@contoso.com,US
+
+    * Import the function in PowerShell using this command:
+     . .\License-Users.ps1
+
+     Execute the import in any of these ways:
+      License-Users -CSVFile c:\temp\users.csv
+      License-Users -CSVFile c:\temp\users.csv -UsageLocation AU
+      License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp
+      License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp -UsageLocation AU
+
+	Author: Francesco Poli fpoli@microsoft.com
+	
+    .PARAMETER CSVFile
+    -CSVFile [path]\file.csv<br> 
+    The only "required" parameter is the -CSVFile, but check UsageLocation
+     
+    .PARAMETER usageLocation
+    -UsageLocation AU<br> 
+    Valid 2 letter standard ISO code [https://www.iso.org/obp/ui/#search/code/] representing markets where Office365 is currently available
+    Parameter is used(applied) when user has no prior UsageLocation already assinged.
+    Available markets https://products.office.com/en/business/international-availability
+    As per 2016-02-10 not available in CU,IR,KP,SD,SY
+
+    It is the UsageLocation parameter in Get-ADUser or Get-MsolUser.
+    UsageLocation is a must have for a user to be able to receive a license, so the script will check if the AD User in Office365 already has it.
+    You have multiple options here:
+
+    * Add the option column UsageLocation to the CSV file, 
+        * if the user has no location already, the one in the column will be used
+    * Pass the parameter to the script
+        * the passed value will be used for all users in CSV, where value is missing on the user in the Cloud 
+    * Do not pass it at all
+        * Script will check anyway for each user if it is present, if it will be the case, then no action will be required, else you will prompted to enter the country code and asked if you want to use the provided one as the default for all the users missing it. <br> 
+        If you refuse to use it as default, you will get a prompt for each one missing.
+
+    .PARAMETER LogDirectory
+    -LogDirectory [path]
+    Script will try to create the directory if non existent, if provided a log with the following name format will be created upon execution `YYYY-MM-DD_HH-MM_Licenses.log` ---> `2018-08-13_15-39_Licenses.log`
+
+            
+    .EXAMPLE
+    License-Users -CSVFile c:\temp\users.csv  
+    Assign licenses using the mapping CSV file
+    
+    .EXAMPLE
+    License-Users -CSVFile c:\temp\users.csv -UsageLocation AU
+    Assign licenses using the mapping CSV file and try to assign Australia as UsageLocation when missing on the user
+    
+
+    .EXAMPLE
+    License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp
+    Assign licenses using the mapping CSV file and generate the execution log in c:\temp
+    
+
+    .EXAMPLE
+    Assign licenses using the mapping CSV file and try to assign Australia as UsageLocation when missing on the user, and generate the log in c:\temp
+
+#>
 Function License-Users {
 [CmdletBinding()]
 
