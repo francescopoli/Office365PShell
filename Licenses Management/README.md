@@ -22,8 +22,6 @@ This script will let you input a CSV file containig a list of users and relative
     * `License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp`
     * `License-Users -CSVFile c:\temp\users.csv -LogDirectory c:\temp -UsageLocation AU`
  <br>
- <br>
-
 
 ##### -CSVFile [path]\file.csv<br> 
 The only "required" parameter is the -CSVFile, but check UsageLocation
