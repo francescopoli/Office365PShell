@@ -12,7 +12,7 @@
       * Keep ctrl + Shift pressed
          * press Right Arrow 
          * press Down Arrow
-      * Use the convert to table from the menu` and then select the who
+      * Use the convert to table from the menu` and then select the whole table then use the Align Top format tool
 
 #### Usage <br>
 Use the script in any of the following way <br>
