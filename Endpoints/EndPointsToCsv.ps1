@@ -32,7 +32,7 @@
         --- Keep ctrl + Shift pressed
         --- press Right Arrow 
         --- press Down Arrow
-        Use the convert to table from the menu` and then select the whole table and 
+        Use the convert to table from the menu` and then select the whole table then 
         use the Align Top format tool
 
     .PARAMETER $Path
@@ -48,9 +48,10 @@ Param(
     [Parameter(Mandatory=$false,ValueFromPipeline=$false)] [switch] $GenerateTXT = $false
 
 )
+$RequestGuid = New-Guid
 $json = Invoke-RestMethod -Method GET `
-        -Uri "https://endpoints.office.com/endpoints/worldwide?clientrequestid=b10c5ed1-bad1-445f-b386-b919946339a7"
-
+        -Uri "https://endpoints.office.com/endpoints/worldwide?clientrequestid=$($RequestGuid.ToString())"
+Write-Host $Path
 foreach ($entry in $json | Sort-Object serviceArea){
 
     $path = $path.Trim()
@@ -94,6 +95,6 @@ foreach ($entry in $json | Sort-Object serviceArea){
 
     # Out a PsObject with all the properties defined
 	$csv = New-Object -TypeName PSObject -Property $props
-    $csv | Export-Csv -NoTypeInformation -Path ".\$($entry.serviceArea).csv" -Append -Delimiter "," -NoClobber
+    $csv | Export-Csv -NoTypeInformation -Path "$($path)$($entry.serviceArea).csv" -Append -Delimiter "," -NoClobber
 
 }
