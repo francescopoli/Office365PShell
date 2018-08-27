@@ -26,8 +26,8 @@ Use the script in any of the following way <br>
 
 #### Parameters <br>
 
-###### $Path <br>
+###### -Path "c:\[path]" <br>
 "path\" where to save the csv files. If omitted ".\" will be used.
 
-###### $GenerateTXT <br>
+###### -GenerateTXT <br>
 Switch parameter, if passed with -GenerateTXT it will cause the scrip to generate a per Service folder, containing a list of txt files named as the TCP port used
